@@ -27,6 +27,7 @@ function Cell({
 export default function Table({pitches}) {
     const [editRowId, setEditRowId] = useState(null)
     const [newPitch, setNewPitch] = useState(null)
+    const [newPitches, setNewPitches] = useState([])
 
     const onEditColumn = (rowId) => {
         setEditRowId(rowId)
@@ -43,9 +44,9 @@ export default function Table({pitches}) {
     }
 
     const handleCreate = () => {
-        const newId = pitches.length + 1
+        const newId = 'newId' + (newPitches.length + 1)
         const p = {id: newId, isNew: true}
-        pitches.push(p)
+        setNewPitches([...newPitches, p])
         setNewPitch(p)
         setEditRowId(newId)
     }
@@ -55,6 +56,16 @@ export default function Table({pitches}) {
         if (newPitch === null) return
 
         const method = newPitch.isNew ? 'POST' : 'PATCH'
+
+        if (newPitch.isNew) {
+            delete newPitch.isNew
+            delete newPitch.id
+            const idx = newPitches.findIndex(p => p.id === newPitch.id)
+            setNewPitches((p) => {
+                p.splice(idx, 1)
+                return p
+            })
+        }
 
         fetch(`${BASE_URL}/pitches`, {
             method,
@@ -80,7 +91,7 @@ export default function Table({pitches}) {
             </thead>
             <tbody>
                 {
-                    pitches.map(p => {
+                    [...pitches, ...newPitches].map(p => {
                         const isEditing = editRowId === p.id
                         return <tr key={p.id}>
                             <Cell
